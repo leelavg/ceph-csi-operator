@@ -45,14 +45,16 @@ rules:
 - apiGroups:
   - csi.ceph.io
   resources:
-  - drivers/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - csi.ceph.io
-  resources:
   - drivers/status
   verbs:
   - get
   - patch
   - update
+- apiGroups:
+  - csi.ceph.io
+  resources:
+  - operatorconfigs
+  verbs:
+  - get
+  - list
+  - watch
