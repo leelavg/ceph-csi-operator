@@ -45,6 +45,12 @@ rules:
 - apiGroups:
   - csi.ceph.io
   resources:
+  - drivers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - csi.ceph.io
+  resources:
   - drivers/status
   verbs:
   - get

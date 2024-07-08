@@ -19,10 +19,8 @@ package controller
 import (
 	"os"
 
-	storagev1 "k8s.io/api/storage/v1"
-	"k8s.io/utils/ptr"
-
 	csiv1a1 "github.com/ceph/ceph-csi-operator/api/v1alpha1"
+	"github.com/ceph/ceph-csi-operator/internal/utils"
 )
 
 var imageDefaults = map[string]string{
@@ -35,44 +33,26 @@ var imageDefaults = map[string]string{
 	"addons":      "quay.io/csiaddons/k8s-sidecar:v0.8.0",
 }
 
-var driverDefaults = csiv1a1.DriverSpec{
-	EnableMetadata:   ptr.To(false),
-	GRpcTimeout:      150,
-	SnapshotPolicy:   csiv1a1.AutoDetectSnapshotPolicy,
-	GenerateOMapInfo: ptr.To(false),
-	FsGroupPolicy:    storagev1.FileFSGroupPolicy,
-	AttachRequired:   ptr.To(true),
-	DeployCsiAddons:  ptr.To(false),
-	CephFsClientType: csiv1a1.KernelCephFsClient,
-	LeaderElection: &csiv1a1.LeaderElectionSpec{
-		LeaseDuration: 137,
-		RenewDeadline: 107,
-		RetryPeriod:   26,
-	},
-	Plugin: &csiv1a1.PluginSpec{
-		PodCommonSpec: csiv1a1.PodCommonSpec{
-			PrioritylClassName: ptr.To(""),
-		},
-		EnableSeLinuxHostMount: ptr.To(false),
-	},
-	Provisioner: &csiv1a1.ProvisionerSpec{
-		PodCommonSpec: csiv1a1.PodCommonSpec{
-			PrioritylClassName: ptr.To(""),
-		},
-	},
+const (
+	defaultGRrpcTimeout   = 150
+	defaultSnapshotPolicy = csiv1a1.AutoDetectSnapshotPolicy
+)
+
+var defaultLeaderElection = csiv1a1.LeaderElectionSpec{
+	LeaseDuration: 137,
+	RenewDeadline: 107,
+	RetryPeriod:   26,
 }
 
-var operatorNamespace = ""
-var operatorConfigName = ""
-
-func init() {
-	ok := false
-
-	if operatorNamespace, ok = os.LookupEnv("OPERATOR_NAMESPACE"); !ok {
+var operatorNamespace = (func() string {
+	namespace, ok := os.LookupEnv("OPERATOR_NAMESPACE")
+	if !ok {
 		panic("Missing required OPERATOR_NAMESPACE environment variable")
 	}
+	return namespace
+})()
 
-	if operatorConfigName, ok = os.LookupEnv("OPERATOR_CONFIG_NAME"); !ok {
-		operatorConfigName = "ceph-csi-operator-config"
-	}
-}
+var operatorConfigName = (func() string {
+	name, ok := os.LookupEnv("OPERATOR_CONFIG_NAME")
+	return utils.If(ok, name, "ceph-csi-operator-config")
+})()
